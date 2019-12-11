@@ -1,4 +1,5 @@
-% Givna variabler
+%p_SE1010_MP ModellParametrar
+%Givna variabler
     A   = 0.6;              %m2         Fortonets frontarea
     a1  = 6;                %m/s2       Max acceleration
     a2  = -15;              %m/s2       Max retardation    

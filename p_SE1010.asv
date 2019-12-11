@@ -1,17 +1,18 @@
 %% Lastfall A - Konstant fart v
-clear all, close all, clc, p_SE1010_MP; LF = 'A'; disp(['Lastfall ' LF])
+clear all, close all, clc, SE1010pModellparametrar; LF = 'A'; disp(LF)
 a = 0;                     %Acceleration
 v = v/2;                   %Fart
 %% Lastfall B - Konstant accelaration a från låg fart
-clear all, close all, clc, p_SE1010_MP; LF = 'B'; disp(['Lastfall ' LF])
+clear all, close all, clc, SE1010pModellparametrar; LF = 'B'; disp(LF)
 a = a1;                    %Acceleration
 v = v/2;                   %Fart
 %% Lastfall C - Konstant retardation a från maxfart
-clear all, close all, clc, p_SE1010_MP; LF = 'C'; disp(['Lastfall ' LF])
+clear all, close all, clc, SE1010pModellparametrar; LF = 'C'; disp(LF)
 a = a2;                    %Acceleration
 v = v;                     %Fart
 %% Lastfall D - Kurvtagning
-clear all, close all, clc, p_SE1010_MP; LF = 'D'; disp(['Lastfall ' LF])
+clear all, close all, clc, SE1010pModellparametrar; LF = 'D'; 
+disp('Lastfall'LF)
 a = 0;                     %Acceleration
 v = v/2;                   %Fart
 Hc = (m*v^2)/R;            %Centripetalkraften
