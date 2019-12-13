@@ -28,7 +28,8 @@
 % Övriga variabler
     g   = 9.82;             %m/s2       Tyngdacceleration
     pluft = 1.21;  %1.2041;         %kg/m3      Densitet luft
-    D  = 0.044;
+    D = 0.043;               %m          Axelns diameter
+    d = 0.6*D;               %m          Axelns diameter
     Hc = 0;                  %Centrifugalkraften
 %{
             Mer

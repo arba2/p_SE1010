@@ -1,18 +1,17 @@
 %% Lastfall A - Konstant fart v
-clear all, close all, clc, SE1010pModellparametrar; LF = 'A'; disp(LF)
+clear all, close all, clc, p_SE1010_MP; LF = 'A'; disp(['Lastfall ' LF])
 a = 0;                     %Acceleration
 v = v/2;                   %Fart
 %% Lastfall B - Konstant accelaration a från låg fart
-clear all, close all, clc, SE1010pModellparametrar; LF = 'B'; disp(LF)
+clear all, close all, clc, p_SE1010_MP; LF = 'B'; disp(['Lastfall ' LF])
 a = a1;                    %Acceleration
 v = v/2;                   %Fart
 %% Lastfall C - Konstant retardation a från maxfart
-clear all, close all, clc, SE1010pModellparametrar; LF = 'C'; disp(LF)
+clear all, close all, clc, p_SE1010_MP; LF = 'C'; disp(['Lastfall ' LF])
 a = a2;                    %Acceleration
 v = v;                     %Fart
 %% Lastfall D - Kurvtagning
-clear all, close all, clc, SE1010pModellparametrar; LF = 'D'; 
-disp('Lastfall'LF)
+clear all, close all, clc, p_SE1010_MP; LF = 'D'; disp(['Lastfall ' LF])
 a = 0;                     %Acceleration
 v = v/2;                   %Fart
 Hc = (m*v^2)/R;            %Centripetalkraften
@@ -57,16 +56,16 @@ else
     Fk = 0;
     Vb = (FD*rh)/rb;
 end
-Fbi = FD/2;              %(FD/(Hbi + Hby))*Hbi   %OM LIVET VORE RÄTTVIST
-Fby = Fbi;               %(FD/(Hbi + Hby))*Hby
+Vbi = FD/2;              %(FD/(Hbi + Hby))*Hbi   %OM LIVET VORE RÄTTVIST
+Vby = Vbi;               %(FD/(Hbi + Hby))*Hby
 
 syms Hli Fli Fly Vli Vly
 eq21 = Hbi - Hli + Hby == 0;                                                        %Kraftjämvikt i x-led
-eq22 = Fbi - Fli + Fk - Fly + Fby == 0;                                             %Kraftjämvikt i y-led
+eq22 = Vbi - Fli + Fk - Fly + Vby == 0;                                             %Kraftjämvikt i y-led
 eq23 = Vbi - Vli - Vb - Vly + Vby == 0;                                             %Kraftjämvikt i z-led
-%eq24 = - Fbi*rh - Mb*rb + Fk*rd - Fby*rh == 0;   ÖVERFLÖDIG                        %Momentjämvikt kring x
+%eq24 = - Vbi*rh - Mb*rb + Fk*rd - Vby*rh == 0;   ÖVERFLÖDIG                        %Momentjämvikt kring x
 eq25 = Hbi*rh + Vli*b1 + Vb*(L/2 - bb) + Vly*(L - b1) + Hby*rh - Vby*L == 0;        %Momentjämvikt kring y
-eq26 = Fbi*0 - Fli*b1 + Fk*(L/2 + bd) - Fly*(L - b1) + Fby*L == 0;                  %Momentjämvikt kring z-axeln
+eq26 = Vbi*0 - Fli*b1 + Fk*(L/2 + bd) - Fly*(L - b1) + Vby*L == 0;                  %Momentjämvikt kring z-axeln
 
 s2 = solve([eq21, eq22, eq23, eq25, eq26], [Hli, Fli, Fly, Vli, Vly]);
 Hli = getfield(s2,'Hli');
@@ -85,153 +84,225 @@ fprintf(' Fk = %g N\n Vb = %g N\n Vli = %g N\n Vly = %g N\n Hli = %g N\n Fli = %
 
 
 %% SNITTNING ****************************************************************
-ix =  [0, b1, b1, L/2-bb, L/2-bb, L/2+bd, L/2+bd, L-b1, L-b1, L]; %Intervallvektor
+disp('Snittning')
+%SP = [b1 L/2-bb L/2+bd L-b1 L];         %Snittpunkter
 
-%Normalkraft i x-riktning
-Nx1 = Hbi;
-Nx2 = Nx1 - Hli;
-Nx3 = Nx2; 
-Nx4 = Nx3;
-Nx5 = Nx4 + Hby;
+%0 <= x < b1
+Tz1 = @() -Vbi;                          %Tvärspänning Z-axeln
+M1 = @(x) -Vbi * x - Hbi * rh;          %Moment XZ-planet
 
-Nx = [Nx1, Nx1, Nx2, Nx2, Nx3, Nx3, Nx4, Nx4, Nx5, Nx5]';
-figure (1)
-plot(ix, Nx)
-title(['Normalkraft i x-riktning Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Kraft [N]')
+%b1 <= x < L/2-bb
+Tz2 = @() Tz1() + Vli;                    %Tvärspänning Z-axeln
+My2 = @(x) M1(x) + Vli * (x-b1);         %Moment XZ-planet
 
-% Tvärkraft i y-riktning
-Ty1 = -Fbi;
-Ty2 = -Fbi + Fli;
-Ty3 =  Ty2;
-Ty4 = -Fbi + Fli - Fk;
-Ty5 = -Fbi + Fli - Fk + Fly;
+%L/2-bb <= x < L-b1
+Tz3 = @() Tz2() - Vb;                    %Tvärspänning Z-axeln
+My3 = @(x) My2(x) - Vb * (x-(L/2-bb));    %Moment XZ-planet
 
-Ty = [Ty1, Ty1, Ty2, Ty2, Ty3, Ty3, Ty4, Ty4, Ty5, Ty5]';
-figure (2)
-plot(ix, Ty)
-title(['Tvärkraft i y-riktning Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Kraft [N]')
+%L-b1 <= x < L
+Tz4 = @() Tz3() + Vly;                    %Tvärspänning Z-axeln
+My4 = @(x) My3(x) + Vly * (x-(L-b1));     %Moment XZ-planet
 
-% Tvärkraft i z-riktning
-Tz1 = -Vbi;
-Tz2 = -Vbi + Vli;
-Tz3 = -Vbi + Vli + Vb;
-Tz4 =  Tz3;
-Tz5 = -Vbi + Vli + Vb + Vly;
+%------------------------------------------------------
+%0 <= x < b1
+Ty1 = @() -FD/2;                         %Tvärspänning Y-axeln
+Mz1 = @(x) FD/2 * x;                    %Moment XY-planet
 
-Tz = [Tz1, Tz1, Tz2, Tz2, Tz3, Tz3, Tz4, Tz4, Tz5, Tz5]';
-figure (3)
-plot(ix, Tz)
-title(['Tvärkraft i z-riktning Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Kraft [N]')
+%b1 <= x < L/2+bd
+Ty2 = @() Fli + Ty1();                    %Tvärspänning Y-axeln
+Mz2 = @(x) Mz1(x) - Fli * (x-b1);         %Moment XY-planet
 
-% Moment kring x
-Mx1 = -Fbi*rh;
-Mx2 = Mx1;
-Mx3 = Mx1 - Vb*rb; 
-Mx4 = Mx3 + Fk*rd;
-Mx5 = Mx4;
+%L/2-bd <= x < L-b1
+Ty3 = @() -Fk + Ty2();                    %Tvärspänning Y-axeln
+Mz3 = @(x) Mz2(x) + Fk * (x-(L/2+bd));    %Moment XY-planet
 
-Mx = [Mx1, Mx1, Mx2, Mx2, Mx3, Mx3, Mx4, Mx4, Mx5, Mx5]';
-figure (4)
-plot(ix, Mx)
-title(['Moment kring x Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Kraft [N]')
+%L-b1 <= x < L
+Ty4 = @() Fly + Ty3();                    %Tvärspänning Y-axeln
+Mz4 = @(x) Mz3(x) - Fly * (x-(L-b1));     %Moment XY-planet
 
-% Moment kring y
-My11 = Hbi*rh - Vbi*ix(1);
-My12 = Hbi*rh - Vbi*ix(2);
-My21 = Hbi*rh - Vbi*ix(2) + Vli*(ix(2)-ix(2));
-My22 = Hbi*rh - Vbi*ix(4) + Vli*(ix(4)-ix(2));
-My31 = Hbi*rh - Vbi*ix(4) + Vli*(ix(4)-ix(2)) + Vb*(ix(4)-ix(4));
-My32 = Hbi*rh - Vbi*ix(6) + Vli*(ix(6)-ix(2)) + Vb*(ix(6)-ix(4));
-My41 = Hbi*rh - Vbi*ix(6) + Vli*(ix(6)-ix(2)) + Vb*(ix(6)-ix(4));  % My4 INTE ETT SNITT 
-My42 = Hbi*rh - Vbi*ix(8)  + Vli*(ix(8) -ix(2)) + Vb*(ix(8) -ix(4)) + Vly*(ix(8) -ix(8));
-My51 = Hbi*rh - Vbi*ix(8)  + Vli*(ix(8) -ix(2)) + Vb*(ix(8) -ix(4)) + Vly*(ix(8) -ix(8));
-My52 = Hbi*rh - Vbi*ix(10) + Vli*(ix(10)-ix(2)) + Vb*(ix(10)-ix(4)) + Vly*(ix(10)-ix(8));
+%------------------------------------------------------
+%0 <= x < L/2-bb
+Mx1 = @() -FD/2*rh;                      %Moment YZ-planet
 
-My = [My11, My12, My21, My22, My31, My32, My41, My42, My51, My52];
-%ixMy = ix; ixMy(7:8) = [];                  %Kortar ner ix till 4 intervall
-figure(5)
-plot(ix,My)
-title(['Moment kring y Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Moment [Nm]')
+%L/2-bb <= x < L/2+bd
+Mx2 = @() -Vb*rb + Mx1();                %Moment YZ-planet
 
-% Moment kring z-axeln
-Mz11 = Fbi*ix(1);
-Mz12 = Fbi*ix(2);
-Mz21 = Fbi*ix(2)  - Fli*(ix(2) -ix(2));
-Mz22 = Fbi*ix(4)  - Fli*(ix(4) -ix(2)); 
-Mz31 = Fbi*ix(4)  - Fli*(ix(4) -ix(2));  % Mz3 INTE ETT SNITT 
-Mz32 = Fbi*ix(6)  - Fli*(ix(6) -ix(2)) + Fk*(ix(6) -ix(6));
-Mz41 = Fbi*ix(6)  - Fli*(ix(6) -ix(2)) + Fk*(ix(6) -ix(6));
-Mz42 = Fbi*ix(8)  - Fli*(ix(8) -ix(2)) + Fk*(ix(8) -ix(6));
-Mz51 = Fbi*ix(8)  - Fli*(ix(8) -ix(2)) + Fk*(ix(8) -ix(6)) - Fly*(ix(8) -ix(8));
-Mz52 = Fbi*ix(10) - Fli*(ix(10)-ix(2)) + Fk*(ix(10)-ix(6)) - Fly*(ix(10)-ix(8));
+%L/2+bd <= x < L
+Mx3 = @() Fk*rd + Mx2();                %Moment YZ-planet
 
-Mz   = [Mz11, Mz12, Mz21, Mz22, Mz31, Mz32 Mz41, Mz42, Mz51, Mz52];
-%ixMz = ix; ixMz(5:6) = [];                  %Kortar ner ix till 4 intervall
-figure(6)
-plot(ix,Mz)             
-title(['Moment kring z Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Moment [Nm]')
-%% Von mises
+%------------------------------------------------------
+%0 <= x < b1
+Nx1 = @() Hbi;                           %Normalkraft i X-axeln
 
-maxMy = max(abs(My));               %maxvärde My
-maxMz = max(abs(Mz));               %maxvärde Mz
-maxM  = sqrt(maxMy^2 + maxMy^2);    %Sammansatt böjmoment enligt pythagoras
+%b1 <= x < L
+Nx2 = @() -Hli + Nx1();                  %Normalkraft i X-axeln
+%------------------------------------------------------
+syms x
 
-maxTy = max(abs(Ty));               %maxvärde Ty
-maxTz = max(abs(Tz));               %maxvärde Tz
-maxT  = sqrt(maxTy^2 + maxTz^2);    %Sammansatt tvärkraft enligt pythagoras
+N(x)  = piecewise(0 <= x < b1, Nx1(), b1 <= x < L, Nx2());
+Mx(x) = piecewise(0 <= x < L/2-bb, Mx1(), L/2-bb <= x < L/2+bd, Mx2(), L/2+bd <= x < L, Mx3());
+Mz(x) = piecewise(0 <= x < b1, Mz1(x), b1 <= x < L/2+bd, Mz2(x), L/2-bd <= x < L-b1, Mz3(x), L-b1 <= x < L, Mz4(x));
+Ty(x) = piecewise(0 <= x < b1, Ty1(), b1 <= x < L/2+bd, Ty2(), L/2-bd <= x < L-b1, Ty3(), L-b1 <= x < L, Ty4());
+My(x) = piecewise(0 <= x < b1, M1(x), b1 <= x < L/2-bb, My2(x), L/2-bb <= x < L-b1, My3(x), L-b1 <= x < L, My4(x));
+Tz(x) = piecewise(0 <= x < b1, Tz1(), b1 <= x < L/2-bb, Tz2(), L/2-bb <= x < L-b1, Tz3(), L-b1 <= x < L, Tz4());
 
-Sigma_s = 310*10^6;            %Sträckgräns 310Mpa för Stål SS165001 
-Sigma_eff = Sigma_s/ns;        %Effektivspänning (ns given säkerhetsfaktor)
+clear z
+z(x) = piecewise(0 < x <= b1, d/2, b1 < x < L-b1, D/2, L-b1 <= x < L, d/2);
 
-syms d Wb Wv Sigma_max T_max            %DIMENSIONERING  
+%% ------------VON MISES------------
+disp('von Mises')
+%Wb = pi*z^3/32;                 %Se FS 6.9      %Böjmotstånd
+%Wv = pi*z^3/16;                 %Se FS 6.78     %Vridmotstånd
 
-qn1 = (pi*d^3)/32 == Wb;            
-qn2 = (pi*d^3)/16 == Wv;            
-%qn3 = Sigma_max - maxM/Wb == 0;
-%qn4 = T_max - Mv/Wv == 0;               
-%qn5 = Sigma_eff - sqrt(Sigma_max^2+3*(T_max)^2) == 0; %Effektivspänning
+I =  @(zt) pi*zt^4/4;            %Areatröthetsmoment     Se FS 30.1.3
+Wb = @(zt) I(zt)/abs(zt);        %Böjmotstånd            Se G.L. S79
+Wv = @(zt) pi*zt^3/2;            %Vridmotstånd           Se FS 6.78
 
-s = solve([qn1, qn2], [d, Wb, Wv, Sigma_max, T_max]);
-d = getfield(s,'d'); 
-d = vpa(d); 
-fprintf(' d = %g m\n ', d)
+Aaxel = @(zt) zt^2*pi;           %Axel tvärsnittsarea
 
-Mtot = sqrt(My.^2 + Mz.^2)';
-figure(7)
-plot(ix,Mtot)
-title(['Totala Momentet Lastfall ' [LF]])
-xlabel('Längd [m]')
-ylabel('Moment [Nm]')
+Mtot = @(xt) sqrt(My(xt)^2 + Mz(xt)^2);                   %Sammansatt böjmoment
+Smax = @(xt) N(xt) / Aaxel(z(xt)) + Mtot(xt) / Wb(z(xt)); %Maxspänningen i axeln
+Tmax = @(xt) Mx(xt) / Wv(z(xt));                          %Max skjuvspänning
+VM   = @(xt) sqrt(Smax(xt)^2 + 3*Tmax(xt)^2);
 
-if xi < b1
-       z = d/2;
-   elseif xi < L-b1
-       z = D/2;
-   else
-       z = d/2;
+%% Beräkning av lokala spänningskoncentrationer vid övergångar 
+%...samt bestämning av axeldiameter D
+
+SSmax = Smax/ns;    %Maximal tillåten spänning, inräknat säkerhetsfaktor ns.
+D = 0.001;
+d = 0.6*D;
+KN = 1.45;                                          %Se F.S. 32.4 & 32.5
+KM = 1.35;
+KMx = 1.2;
+SnomN  = @(x, d) double(4*N(x)/(pi*d^2));      %Nominella spänningar
+SnomM  = @(x, d) double(32*Mtot(x)/(pi*d^3));
+SnomMx = @(x, d) double(16*Mx(x)/(pi*d^3));
+
+while true
+    SmaxN1  = KN*SnomN(b1, d);
+    SmaxM1  = KM*SnomM(b1, d);
+    SmaxMx1 = KMx*SnomMx(b1, d);
+    
+    SmaxN2  = KN*SnomN(L-b1, d);
+    SmaxM2  = KM*SnomM(L-b1, d);
+    SmaxMx2 = KMx*SnomMx(L-b1, d);
+    if SSmax > SmaxN1 && SSmax > SmaxM1 && SSmax > SmaxMx1 && SSmax > SmaxN2 && SSmax > SmaxM2 && SSmax > SmaxMx2
+        break
+    end
+    D = D+0.001;
+    d = 0.6*D;
 end
+disp([newline 'Slutgiltig nödvändig diameter D för lastfall ' lastfall ': ' num2str(D*1000) ' mm.'])
+disp(['d: ' num2str(d*1000) ' mm.'])
+disp(['Värde för grafer anges i Projekt_SE1010_variabler!' ])
+fprintf('\nSträckgräns av material: %g Pa\n\nNormalspänning vid b1:   %g Pa\nBöjmoment vid b1:        %g Pa\nVridmoment vid b1:       %g Pa\nNormalspänning vid L-b1: %g Pa\nBöjmoment vid L-b1:      %g Pa\nVridmoment vid L-b1:     %g Pa\n\n ',SSmax,SmaxN1,SmaxM1,SmaxMx1,SmaxN2,SmaxM2,SmaxMx2)
 
-Wv = (pi*z^3)/16            %Böjmotstånd  Se FS 6.9
-Wb = (pi*z^3)/32            %Vridmotstånd Se FS 6.78
+%% UTMATTNING; reduktion av utmattningsdata figur 163 GH s.255 Ex. 43 s.259 GH
+% Materialval Tab. 33.1 s.386 i FS , #7 SIS-141650-01
+Rm  = 590; %MPa Brottgräns
+Su  = 200; %+-200MPa sigma u, betecknar utmattningsgränsen vid växlande drag/tryck
+Sup = 180; %180+-180MPa sigma up, betecknar utmattningsgränsen vid pulserande drag eller tryck
+Subp = 240; %240+-240MPa sigma ubp, betecknar utmattningsgränsen vid pulserande böjning
+Ss  = 310; %sigma s >310 MPa Sträckgräns
+Ktd = 1.65;       %Spänningskoncentrationsfaktorn, drag figur 159b GH s.252
+Ktb = 1.45;       %Spänningskoncentrationsfaktorn, böj figur 159c GH s.252
+q   = 0.85;        %Kälkänslighetsfaktorn Figur 160 GH s.252
 
-Mtot = sqrt(Mxy.^2 + Mxz.^2) %vektoraddera och sätt i en vektor
-Sigma_max = Mtot/Wb
-t_max = Mx/Wv %Vridmoment/Vridmotstånd
-Sigma_vm = []
-Sigma_vm = sqrt(abs((Sigma_max).^2+3*(t_max)^2));
-figure(8)
-plot(Sigma_vm)
+lambda = 1;%Teknologisk dimensionsfaktor. Axel ej gjuten figur 163 GH s.255
+Kfd = 1 + q*(Ktb-1);  %Anvisningsfaktorn drag Ekv.(13-12) GH s.252
+Kfb = 1 + q*(Ktb-1);  %Anvisningsfaktorn böj Ekv.(13-12) GH s.252
+Kd = 1;             %Geometriska volymsfaktorn figur 163 GH s.255
+Kr = 1/0.975;   %Ra = 0.8my m enligt Ytfinhet wiki turning, figur 162b GH s.254
+
+redfd = lambda/(Kfd*Kd*Kr); %reduktionsfaktor drag
+redfb = lambda/(Kfb*Kd*Kr); %reduktionsfaktor drag Blir väldigt lika
+redf = redfd
+%Kdd = 1/0.96; %Geometriska volymsfaktorn figur 161 GH s.253
+%KdD = 1/0.925
+
+Haigh(x) = piecewise(0<=x<Sup, Su+((Sup-Su)/Sup)*x, Sup<=x<=Rm, Sup+(Sup/(Rm-Sup))*Sup+(Sup/(Sup-Rm))*x);
+redSu = Su*redf;
+redSup = Sup*redf;
+redHaigh(x) = piecewise(0<=x<Sup, redSu+((redSup-redSu)/Sup)*x, Sup<=x<=Rm, redSup+(redSup/(Rm-Sup))*Sup+(redSup/(Sup-Rm))*x);
+LSs = @(x) Ss-x %Linjen sigma s
+
+fplot(Haigh,[0 Rm])
+xlabel('Sigma a [MPa]')
+ylabel('Sigma m [MPa]')
+title('Haighdiagram')
+grid on
+axis equal
 hold on
-plot(Mtot)
+fplot(redHaigh,[0 Rm])
+
+fplot(LSs, [0 Ss])
+legend('Haighdiagram','Reducerat Haighdiagram (Arbetslinje)','Sigma s')
+
+%Mittspänning och amplitud GH s.245 Nominella spänningar
+Sm = 0; %(Smax + smin)/2 %mittspänning sigma m = 0 vid rent växlande spänning
+Sa = Snom; %S(Smax - Smin)/2 %spänningsamplitud sigma a
+R = -1; %Spänningsförhållande 
+OB = n*OA
+%% PLOTTAR
+close all
+
+figure('Name',['Moment runt Y - Lastfall ' LF]);
+fplot(My,[0 L]);
+%legend("Moment XZ-planet runt Y")
+xlabel('Position längs X-axeln [m]')
+ylabel('Moment [Nm]')
+title(['Moment runt Y - Lastfall ' LF])
+grid on
+
+figure('Name',['Moment runt Z - Lastfall ' LF]);
+fplot(Mz,[0 L]);
+%legend("Moment XY-planet runt Z")
+xlabel('Position längs X-axeln [m]')
+ylabel('Moment [Nm]')
+title(['Moment  runt Z - Lastfall ' LF])
+grid on
+
+figure('Name',['Moment runt X - Lastfall ' LF]);
+fplot(Mx,[0 L]);
+%legend("Moment YZ-planet runt X")
+xlabel('Position längs X-axeln [m]')
+ylabel('Moment [Nm]')
+title(['Moment runt X - Lastfall ' LF])
+grid on
+
+figure('Name',['Tvärspänning Z - Lastfall ' LF]);
+fplot(Tz1,[0 L]);
+%legend("Tvärspänning Z-axeln")
+xlabel('Position längs X-axeln [m]')
+ylabel('Tryck [Pa]')
+title(['Tvärspänning Z - Lastfall ' LF])
+grid on
+
+figure('Name',['Tvärspänning Y - Lastfall ' LF]);
+fplot(Ty,[0 L]);
+%legend("Tvärspänning Y-axeln")
+xlabel('Position längs X-axeln [m]')
+ylabel('Tryck [Pa]')
+title(['Tvärspänning Y - Lastfall ' LF])
+grid on
+
+figure('Name',['Normalkraft X - Lastfall ' LF]);
+fplot(N,[0 L]);
+%legend("Normalkraft mot YZ-planet")
+xlabel('Position längs X-axeln [m]')
+ylabel('Kraft [N]')
+title(['Normalkraft X - Lastfall ' LF])
+grid on
+
+VMt = [];
+for i = 0:0.01:L
+   VMt = [VMt VM(i)]; 
+end
+figure('Name',['Von Mises - Lastfall ' LF]);
+plot(0:0.01:L,VMt)
+%fplot(VM,[0 L]);
+%legend("Von Mises")
+xlabel('Position längs X-axeln [m]')
+ylabel('Moment [Nm] / Kraft [N]')
+title(['Von Mises - Lastfall ' LF])
+grid on
